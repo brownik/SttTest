@@ -1,0 +1,94 @@
+/*
+ * Copyright 2018 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
+    id 'kotlin-parcelize'
+}
+
+android {
+    compileSdkVersion 33
+    defaultConfig {
+        applicationId "com.google.cloud.examples.speechrecognition"
+        minSdkVersion 23
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    buildFeatures {
+        viewBinding = true
+    }
+    // exclude files that are not needed from the cloud client libraries
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/FastDoubleParser-NOTICE'
+        exclude 'META-INF/FastDoubleParser-LICENSE'
+        exclude 'META-INF/bigint-LICENSE'
+    }
+}
+
+dependencies {
+    implementation 'com.fasterxml.woodstox:woodstox-core:6.2.5' // Woodstox Core
+    implementation 'xml-apis:xml-apis:1.4.01' // XML APIs
+
+    implementation 'com.amazonaws:aws-android-sdk-translate:2.61.0'
+    implementation 'com.amazonaws:aws-android-sdk-transcribe:2.22.0'
+    implementation 'software.amazon.awssdk:s3:2.21.10' // S3 SDK (Transcribe 결과 저장용)
+    implementation 'software.amazon.awssdk:transcribe:2.21.0' // Transcribe SDK
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"
+    implementation "androidx.fragment:fragment-ktx:1.5.4"
+    implementation "androidx.activity:activity-ktx:1.5.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
+    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0-beta01'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    implementation "com.google.cloud:google-cloud-translate:1.94.3"
+
+    // add these dependencies for the speech client
+    implementation "io.grpc:grpc-okhttp:1.38.1"
+    implementation "com.google.cloud:google-cloud-speech:1.29.5"
+    implementation 'com.google.cloud:google-cloud-storage:1.118.0'
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+task copySecretKey(type: Copy) {
+    File secretKey = file "$System.env.GOOGLE_APPLICATION_CREDENTIALS"
+    from secretKey.getParent()
+    include secretKey.getName()
+    into 'src/main/res/raw'
+    rename secretKey.getName(), "credential.json"
+}
+preBuild.dependsOn(copySecretKey)
